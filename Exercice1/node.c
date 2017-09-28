@@ -26,12 +26,11 @@ struct node* create_node(int value)
 
 void add_node(struct node **first_node, struct node *new_node, pthread_mutex_t *mutex)
 {
+	pthread_mutex_lock(mutex);
 	if(*first_node == NULL){
 		*first_node = new_node;
 		return;
 	}
-
-	pthread_mutex_lock(mutex);
 
 	struct node *iterator = *first_node;
 	while(iterator->next) {
@@ -45,35 +44,33 @@ void add_node(struct node **first_node, struct node *new_node, pthread_mutex_t *
 
 void delete_node(struct node **first_node, int value, pthread_mutex_t *mutex)
 {
+	pthread_mutex_lock(mutex);
 	struct node *iterator = *first_node;
 	while(iterator && iterator->val != value)
 		iterator = iterator->next;
 
 	if(iterator == (*first_node)) {
-		pthread_mutex_lock(mutex);
 		*first_node = (*first_node)->next;
-		pthread_mutex_unlock(mutex);
 		free(iterator);
 	} else if(iterator != NULL) {
 		struct node *deleted = iterator;
 		iterator = (*first_node);
 		while(iterator->next != deleted)
 			iterator = iterator->next;
-		pthread_mutex_lock(mutex);
 		iterator->next = iterator->next->next;
-		pthread_mutex_unlock(mutex);
 		free(deleted);
 	}
+	pthread_mutex_unlock(mutex);
 }
 
 void print_list(struct node *first_node, pthread_mutex_t *mutex)
 {
+	pthread_mutex_lock(mutex);
 	if(first_node == NULL) {
 		printf("The list is empty!\n");
 		return;
 	}
 
-	pthread_mutex_lock(mutex);
 	struct node *iterator = first_node;
 	while(iterator)
 	{
@@ -86,6 +83,7 @@ void print_list(struct node *first_node, pthread_mutex_t *mutex)
 
 void sort_list(struct node **first_node, pthread_mutex_t *mutex)
 {
+	pthread_mutex_lock(mutex);
 	int *v = NULL;
 	int size = 0;
 	struct node *iterator = *first_node;
@@ -115,7 +113,6 @@ void sort_list(struct node **first_node, pthread_mutex_t *mutex)
 
 	struct node *aux = NULL;
 	struct node *last_added = NULL;
-	pthread_mutex_lock(mutex);
 	for(i = size - 1; i >= 0; --i)
 	{
 		iterator = *first_node;
@@ -140,9 +137,7 @@ void sort_list(struct node **first_node, pthread_mutex_t *mutex)
 
 void flush_list(struct node **first_node, pthread_mutex_t *mutex)
 {
-	pthread_mutex_lock(mutex);
 	print_list(*first_node, mutex);
 	while(*first_node)
 		delete_node(first_node, 0, mutex);
-	pthread_mutex_unlock(mutex);
 }
